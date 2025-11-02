@@ -1,12 +1,14 @@
 "use client"
+
+import { account } from "@/lib/appwrite"
+import { ID } from "appwrite"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { toast } from "sonner" // optional if you're using toast notifications
-import { Client, Account, ID } from "appwrite"
+import { toast } from "sonner"
 
 export default function SignupPage() {
   const [email, setEmail] = useState("")
@@ -14,12 +16,6 @@ export default function SignupPage() {
   const [name, setName] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-
-  const client = new Client()
-    .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT as string)
-    .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID as string)
-
-  const account = new Account(client)
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,8 +26,8 @@ export default function SignupPage() {
       toast.success("Account created successfully!")
       router.push("/login")
     } catch (error: any) {
-      console.error(error)
-      toast.error(error.message || "Signup failed. Try again.")
+      console.error("Signup error:", error)
+      toast.error(error?.message || "Signup failed. Try again.")
     } finally {
       setLoading(false)
     }
@@ -104,3 +100,4 @@ export default function SignupPage() {
     </div>
   )
 }
+
