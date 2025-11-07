@@ -1,41 +1,44 @@
-import { NextResponse } from "next/server"
-import { Client, Account, ID } from "appwrite"
+import { NextResponse } from "next/server";
+import { Client, Account, Databases, ID } from "appwrite";
 
-// Initialize Appwrite client
 const client = new Client()
-  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || "https://cloud.appwrite.io/v1") // Your Appwrite endpoint
-  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!) // Your project ID
+  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
 
-const account = new Account(client)
+const account = new Account(client);
+const databases = new Databases(client);
 
 export async function POST(req: Request) {
   try {
-    const { email, password, name } = await req.json()
+    const { email, password, name } = await req.json();
 
-    if (!email || !password || !name) {
-      return NextResponse.json(
-        { error: "All fields are required" },
-        { status: 400 }
-      )
-    }
+    // Step 1: Create the Appwrite user
+    const user = await account.create(ID.unique(), email, password, name);
 
-    // Create a new account
-    const user = await account.create(ID.unique(), email, password, name)
+    // Step 2: Create a writer profile in your "writers_data" table
+    await databases.createDocument(
+      process.env.NEXT_PUBLIC_APPWRITE_DB_ID!,
+      process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ID_WRITERS!,
+      user.$id, // use same ID as the user
+      {
+        fullName: name,
+        email: email,
+        bio: "",
+        nationality: "",
+        numberOfPublishedWorks: 0,
+      }
+    );
 
-    return NextResponse.json(
-      { success: true, message: "Account created successfully", user },
-      { status: 201 }
-    )
+    return NextResponse.json({
+      success: true,
+      message: "User and writer profile created successfully!",
+      user,
+    });
   } catch (error: any) {
-    console.error("Signup error:", error)
+    console.error("Signup error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to create account" },
-      { status: 500 }
-    )
+      { success: false, message: error?.message || "Signup failed" },
+      { status: 400 }
+    );
   }
-}
-
-// Optional: Handle preflight CORS (useful for fetch requests from browser)
-export async function OPTIONS() {
-  return NextResponse.json({}, { status: 200 })
 }

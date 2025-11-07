@@ -1,97 +1,111 @@
-"use client"
+"use client";
 
-import { account } from "@/lib/appwrite"
-import { ID } from "appwrite"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { toast } from "sonner"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 export default function SignupPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [name, setName] = useState("")
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
-      await account.create(ID.unique(), email, password, name)
-      toast.success("Account created successfully!")
-      router.push("/login")
+      const res = await fetch("/api/appwrite/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success("Account created successfully!");
+        router.push("/login");
+      } else {
+        toast.error(data.message || "Signup failed. Try again.");
+      }
     } catch (error: any) {
-      console.error("Signup error:", error)
-      toast.error(error?.message || "Signup failed. Try again.")
+      console.error("Signup error:", error);
+      toast.error(error?.message || "Signup failed. Try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-      <Card className="w-[400px] border border-slate-700 bg-slate-900/60 backdrop-blur-xl shadow-2xl text-white">
-        <CardHeader>
-          <CardTitle className="text-2xl font-semibold text-center">Create your account</CardTitle>
+    <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--login-bg-light))] dark:bg-[hsl(var(--login-bg-dark))] transition-colors duration-500">
+      <Card className="w-[500px] border-border bg-[hsl(var(--login-card-bg-light))] dark:bg-[hsl(var(--login-card-bg-dark))] shadow-lg text-[hsl(var(--foreground))]">
+        <CardHeader className="text-center space-y-3 pt-8">
+          <CardTitle className="text-3xl font-bold text-center">Create your account</CardTitle>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSignup} className="space-y-5">
+        <CardContent className="p-12">
+          <form onSubmit={handleSignup} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name" className="text-muted-foreground font-medium mb-2">Full Name</Label>
               <Input
                 id="name"
                 type="text"
                 placeholder="Aditya Tiwari"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-400"
+                className="bg-[hsl(var(--background))] border-border text-[hsl(var(--foreground))] placeholder:text-muted-foreground focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-[hsl(var(--login-card-bg-light))] dark:focus:ring-offset-[hsl(var(--login-card-bg-dark))]"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-muted-foreground font-medium mb-2">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-400"
+                className="bg-[hsl(var(--background))] border-border text-[hsl(var(--foreground))] placeholder:text-muted-foreground focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-[hsl(var(--login-card-bg-light))] dark:focus:ring-offset-[hsl(var(--login-card-bg-dark))]"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-muted-foreground font-medium mb-2">Password</Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-400"
+                className="bg-[hsl(var(--background))] border-border text-[hsl(var(--foreground))] placeholder:text-muted-foreground focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-[hsl(var(--login-card-bg-light))] dark:focus:ring-offset-[hsl(var(--login-card-bg-dark))]"
                 required
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-500 transition-all duration-200"
+              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-md hover:shadow-lg transition-all duration-200 py-3"
               disabled={loading}
             >
               {loading ? "Creating Account..." : "Sign Up"}
             </Button>
           </form>
 
-          <p className="text-center text-sm text-slate-400 mt-6">
+          <p className="text-center text-sm text-muted-foreground mt-6">
             Already have an account?{" "}
-            <a href="/login" className="text-indigo-400 hover:text-indigo-300 transition">
+            <a href="/login" className="text-accent hover:text-accent/80 transition font-medium">
               Log in
             </a>
           </p>
